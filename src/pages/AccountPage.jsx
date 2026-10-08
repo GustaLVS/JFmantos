@@ -3,6 +3,7 @@ import { LuChevronDown, LuHeart, LuLogOut, LuPackage, LuShieldCheck, LuShoppingB
 import { saveCustomerProfile } from "../services/authApi.js";
 import { fetchUserOrders } from "../services/ordersApi.js";
 import { formatPrice } from "../utils/format.js";
+import PersonalizationDetails from "../components/PersonalizationDetails.jsx";
 
 const statusLabels = {
   pending: "Pendente",
@@ -176,12 +177,13 @@ export default function AccountPage({ user, profile, cartItems, totals, favorite
             <h2>Carrinho em andamento</h2>
             {recentItems.length ? (
               <div className="account-order-list">
-                {recentItems.map(({ product, size, quantity }) => (
-                  <article key={`${product.id}-${size}`}>
+                {recentItems.map(({ product, size, quantity, personalization, cartKey }) => (
+                  <article key={cartKey}>
                     <span>{quantity}x</span>
                     <div>
                       <strong>{product.name}</strong>
                       <p>Tamanho {size} - {formatPrice(product.price * quantity)}</p>
+                      <PersonalizationDetails name={personalization?.name} number={personalization?.number} />
                     </div>
                   </article>
                 ))}
@@ -257,6 +259,7 @@ export default function AccountPage({ user, profile, cartItems, totals, favorite
                                 <div>
                                   <strong>{item.product_name}</strong>
                                   <p>Tamanho {item.size} - {formatPrice(Number(item.total_price || item.total || 0))}</p>
+                                  <PersonalizationDetails name={item.personalization_name} number={item.personalization_number} />
                                 </div>
                               </article>
                             )) : <p className="account-muted">Itens indisponiveis para este pedido.</p>}

@@ -1,4 +1,5 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { normalizePersonalization } from "../_shared/personalization.js";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -75,6 +76,13 @@ Deno.serve(async (request) => {
     const requestedItems = Array.isArray(body.items) ? body.items : [];
     if (!requestedItems.length) return json({ error: "O carrinho esta vazio." }, 400);
 
+    let personalizations: Array<ReturnType<typeof normalizePersonalization>>;
+    try {
+      personalizations = requestedItems.map((item) => normalizePersonalization(item.personalization));
+    } catch (error) {
+      return json({ error: errorMessage(error) }, 400);
+    }
+
     const productIds = [...new Set(requestedItems.map((item) => String(item.productId || "")).filter(Boolean))];
     stage = "consulta-dos-produtos";
     const { data: products, error: productsError } = await supabaseAdmin
@@ -89,7 +97,7 @@ Deno.serve(async (request) => {
     }
 
     const productsById = new Map(products.map((product) => [String(product.id), product]));
-    const orderItems = requestedItems.map((item) => {
+    const orderItems = requestedItems.map((item, index) => {
       const product = productsById.get(String(item.productId));
       if (!product) throw new Error("Produto indisponivel.");
 
@@ -102,6 +110,8 @@ Deno.serve(async (request) => {
         category: product.category,
         season: product.season,
         size: String(item.size || "M").slice(0, 10),
+        personalization_name: personalizations[index]?.name || null,
+        personalization_number: personalizations[index]?.number || null,
         quantity,
         unit_price: unitPrice,
         total: money(unitPrice * quantity),

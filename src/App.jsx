@@ -15,6 +15,8 @@ import SignupPage from "./pages/SignupPage.jsx";
 import { fetchCustomerProfile, getCurrentSession, signOutCustomer, watchAuthState } from "./services/authApi.js";
 import { createProduct, deleteProduct, fetchProducts, updateProduct } from "./services/productsApi.js";
 import { getStored } from "./utils/format.js";
+import { addCartItem, changeCartItemQuantity, getCartItemKey, removeCartItem } from "./utils/cart.js";
+import { normalizePersonalization } from "../supabase/functions/_shared/personalization.js";
 
 const defaultFilters = { category: "", team: "", size: "", price: 420, type: "", audience: "", search: "" };
 const ADMIN_EMAILS = ["alvesgustavosouza2022@gmail.com"];
@@ -127,22 +129,24 @@ export default function App() {
 
   const showToast = (message) => setToast(message);
 
-  const addToCart = (productId, size = "M", quantity = 1) => {
+  const addToCart = (productId, size = "M", quantity = 1, personalization = null) => {
     const product = products.find((item) => item.id === productId);
     if (!product) return;
     const finalSize = product.sizes.includes(size) ? size : product.sizes[0];
-    setCart((current) => {
-      const existing = current.find((item) => item.productId === productId && item.size === finalSize);
-      if (existing) {
-        return current.map((item) => item === existing ? { ...item, quantity: item.quantity + quantity } : item);
-      }
-      return [...current, { productId, size: finalSize, quantity }];
-    });
+    let normalized;
+    try {
+      normalized = normalizePersonalization(personalization);
+      if (personalization && !normalized) throw new Error("Informe o nome ou numero para personalizar a camisa.");
+    } catch (error) {
+      showToast(error.message);
+      return;
+    }
+    setCart((current) => addCartItem(current, { productId, size: finalSize, quantity, personalization: normalized }));
     showToast(`${product.name} adicionada ao carrinho.`);
   };
 
   const cartItems = cart
-    .map((item) => ({ ...item, product: products.find((product) => product.id === item.productId) }))
+    .map((item) => ({ ...item, cartKey: getCartItemKey(item), product: products.find((product) => product.id === item.productId) }))
     .filter((item) => item.product);
 
   const totals = cartItems.reduce((acc, item) => {
@@ -153,14 +157,12 @@ export default function App() {
   totals.discount = totals.subtotal >= 500 ? 35 : 0;
   totals.total = Math.max(0, totals.subtotal + totals.shipping - totals.discount);
 
-  const changeQuantity = (productId, size, delta) => {
-    setCart((current) => current
-      .map((item) => item.productId === productId && item.size === size ? { ...item, quantity: item.quantity + delta } : item)
-      .filter((item) => item.quantity > 0));
+  const changeQuantity = (cartKey, delta) => {
+    setCart((current) => changeCartItemQuantity(current, cartKey, delta));
   };
 
-  const removeItem = (productId, size) => {
-    setCart((current) => current.filter((item) => !(item.productId === productId && item.size === size)));
+  const removeItem = (cartKey) => {
+    setCart((current) => removeCartItem(current, cartKey));
   };
 
   const showDetails = (id) => {

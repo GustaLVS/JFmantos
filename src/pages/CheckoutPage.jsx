@@ -128,7 +128,7 @@ export default function CheckoutPage({ totals, cartItems, user, profile, showToa
             {loading ? "Abrindo Mercado Pago..." : "Pagar agora"}
           </button>
         </form>
-        <SummaryPanel totals={checkoutTotals} promoCode={appliedPromo?.code} />
+        <SummaryPanel totals={checkoutTotals} promoCode={appliedPromo?.code} items={cartItems} />
       </div>
     </section>
   );

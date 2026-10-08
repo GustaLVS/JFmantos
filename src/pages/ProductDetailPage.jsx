@@ -2,11 +2,14 @@ import { useEffect, useState } from "react";
 import { categoryLabel } from "../data/products.js";
 import { formatPrice } from "../utils/format.js";
 import { cardBackground, ProductImage, productImages } from "../utils/productVisuals.jsx";
+import ShirtPersonalization from "../components/ShirtPersonalization.jsx";
 
 export default function ProductDetailPage({ product, onAdd }) {
   const [size, setSize] = useState(product.sizes[0]);
   const [quantity, setQuantity] = useState(1);
   const [activeImage, setActiveImage] = useState(0);
+  const [personalize, setPersonalize] = useState(false);
+  const [personalization, setPersonalization] = useState({ name: "", number: "" });
   const allSizes = ["P", "M", "G", "GG"];
   const oldPrice = product.price * 1.12;
   const cashback = product.price * 0.02;
@@ -17,6 +20,8 @@ export default function ProductDetailPage({ product, onAdd }) {
     setSize(product.sizes[0]);
     setQuantity(1);
     setActiveImage(0);
+    setPersonalize(false);
+    setPersonalization({ name: "", number: "" });
   }, [product]);
 
   return (
@@ -67,31 +72,38 @@ export default function ProductDetailPage({ product, onAdd }) {
             <span>{product.audience || "Masculino"}</span>
           </div>
 
-          <h2>Tamanho</h2>
-          <div className="size-options">
-            {allSizes.map((item) => (
-              <button
-                className={`size-option ${size === item ? "active" : ""}`}
-                type="button"
-                key={item}
-                disabled={!product.sizes.includes(item)}
-                onClick={() => setSize(item)}
-              >
-                {item}
-              </button>
-            ))}
-          </div>
+          <form onSubmit={(event) => {
+            event.preventDefault();
+            onAdd(product.id, size, quantity, personalize ? personalization : null);
+          }}>
+            <h2>Tamanho</h2>
+            <div className="size-options">
+              {allSizes.map((item) => (
+                <button
+                  className={`size-option ${size === item ? "active" : ""}`}
+                  type="button"
+                  key={item}
+                  disabled={!product.sizes.includes(item)}
+                  onClick={() => setSize(item)}
+                >
+                  {item}
+                </button>
+              ))}
+            </div>
 
-          <h2>Quantidade</h2>
-          <div className="quantity-control">
-            <button type="button" onClick={() => setQuantity((value) => Math.max(1, value - 1))}>-</button>
-            <strong>{quantity}</strong>
-            <button type="button" onClick={() => setQuantity((value) => value + 1)}>+</button>
-          </div>
+            <ShirtPersonalization enabled={personalize} onToggle={setPersonalize} value={personalization} onChange={setPersonalization} />
 
-          <button className="button primary full buy-now-button" type="button" onClick={() => onAdd(product.id, size, quantity)}>
-            Comprar
-          </button>
+            <h2>Quantidade</h2>
+            <div className="quantity-control">
+              <button type="button" onClick={() => setQuantity((value) => Math.max(1, value - 1))}>-</button>
+              <strong>{quantity}</strong>
+              <button type="button" onClick={() => setQuantity((value) => value + 1)}>+</button>
+            </div>
+
+            <button className="button primary full buy-now-button" type="submit">
+              Comprar
+            </button>
+          </form>
 
           <div className="info-strip">
             <div>Entrega para todo o Brasil.</div>

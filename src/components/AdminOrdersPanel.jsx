@@ -3,6 +3,7 @@ import { LuFileSpreadsheet, LuPackageCheck, LuRefreshCw, LuTrash2 } from "react-
 import { deleteOrder, fetchAdminOrders, updateOrderTracking } from "../services/ordersApi.js";
 import { downloadOrdersCsv, ordersExportFilename } from "../utils/exportOrdersCsv.js";
 import { formatPrice } from "../utils/format.js";
+import PersonalizationDetails from "./PersonalizationDetails.jsx";
 
 const statusLabels = {
   pending: "Pendente",
@@ -247,7 +248,10 @@ export default function AdminOrdersPanel({ showToast }) {
                     {order.items?.length ? order.items.map((item) => (
                       <div className="order-item-row" key={item.id}>
                         <span>{item.quantity}x</span>
-                        <strong>{item.product_name}</strong>
+                        <div>
+                          <strong>{item.product_name}</strong>
+                          <PersonalizationDetails name={item.personalization_name} number={item.personalization_number} />
+                        </div>
                         <span>Tam. {item.size}</span>
                         <span>{formatPrice(Number(item.total_price || item.total || 0))}</span>
                       </div>

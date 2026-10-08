@@ -25,10 +25,11 @@ export async function validatePromotionalCode(code, subtotal) {
 
 export async function createMercadoPagoCheckout({ cartItems, customer, paymentMethod, promoCode }) {
   const data = await invokePaymentFunction("create-mercado-pago-preference", {
-      items: cartItems.map(({ product, size, quantity }) => ({
+      items: cartItems.map(({ product, size, quantity, personalization }) => ({
         productId: product.id,
         size,
         quantity,
+        personalization: personalization || null,
       })),
       customer,
       paymentMethod,
