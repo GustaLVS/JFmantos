@@ -93,11 +93,9 @@ export default function App() {
         const databaseProducts = await fetchProducts();
         if (isMounted && databaseProducts.length) {
           setProducts(databaseProducts);
-          showToast("Produtos carregados do Supabase.");
         }
       } catch (error) {
         console.error(error);
-        if (isMounted) showToast("Nao foi possivel carregar o Supabase. Usando produtos locais.");
       }
     }
 
